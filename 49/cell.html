@@ -18,18 +18,84 @@
 	</head>
 	<body>
 		<div id="map">
-		<h2>Map should be here, if you're reading this, something went wrong</h2><br/>
+		<h2>Map should be here, if you're reading this and nothing happens, something went terribly wrong</h2><br/>
 		</div>
 		<script>
 
+function centerMap(x, y, c) {
+	var bounds = new google.maps.LatLngBounds();
+	bounds.extend(new google.maps.LatLng(x.lat, x.lon));
+	bounds.extend(new google.maps.LatLng(y.lat, y.lon));
+	bounds.extend(new google.maps.LatLng(c.lat, c.lon));
+	map.fitBounds(bounds);
+}
+
+function drawMarker(lat, lon, markerTitle, markerIcon) {
+	console.log('markering ' + markerTitle + ' with ' + markerIcon + ' in ' + lat + ', ' + lon);
+	var m = new google.maps.Marker({
+		position: new google.maps.LatLng(lat, lon),
+		map: map,
+		title: markerTitle,
+		icon: markerIcon
+	});
+	m.desc = 'marker ' + markerTitle;
+}
+
+var markerX 	= 'http://labs.google.com/ridefinder/images/mm_20_green.png';
+var markerZ 	= 'http://labs.google.com/ridefinder/images/mm_20_red.png';
+var markerC 	= 'http://labs.google.com/ridefinder/images/mm_20_orange.png';
+
+function destination(from, bearing, distance) {
+	return from.destinationPoint(distance, bearing);
+}
+
+function polygonCoordinates(start, end, lat, lon, distance) {
+	var center = new LatLon(lat, lon);
+	var destination;
+	var points = new Array();
+	for (i = start; i <= end; i++) {
+		destination = center.destinationPoint(distance, i);
+		points.push(new google.maps.LatLng(destination.lat, destination.lon));
+	}
+	points.push(new google.maps.LatLng(lat, lon));
+	console.log('polygon coordinates are ' + points);
+	return points;
+}
+
+function drawPolygon(coordinates) {
+	var p = new google.maps.Polygon({
+		paths: coordinates,
+		strokeColor: 'white',
+		strokeOpacity: 1,
+		strokeWeight: 2,
+		fillColor: 'white',
+		fillOpacity: 0.2,
+		map: map
+	});
+}
+
+var C = new LatLon(-33.894582, 151.239057);
+var bearingX = 30; 		// degrees
+var bearingZ = 110;		// degrees
+var distance = 3000; 	// meters
+
 function initialize() {
-	
+	var X = destination(C, bearingX, distance);
+	var Z = destination(C, bearingZ, distance);
+	drawMarker(X.lat, X.lon, 
+		'X', markerX);
+	drawMarker(Z.lat, Z.lon, 
+		'Z', markerZ);
+	drawMarker(C.lat, C.lon,
+		'Cell', markerC);
+	centerMap(X, Z, C);
+	drawPolygon(polygonCoordinates(bearingX, bearingZ, C.lat, C.lon, distance));
 }
 
 function initMap() {
 	map = new google.maps.Map(document.getElementById('map'), {
 		zoom: 14,
-		center: {lat: -33.9, lng: 151.2},
+		center: {lat: -33.894582, lng: 151.239057},
 		mapTypeId: google.maps.MapTypeId.HYBRID
 	});
 	initialize();
